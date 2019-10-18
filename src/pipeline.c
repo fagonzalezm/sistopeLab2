@@ -20,7 +20,101 @@
 //Funcionamiento: Primero prepara las entradas (argv) que requiere para el pipeline. Luego, 
 //Salida: --
 void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag){
+    preparation(mValue);
+    //Pipeline
+    for(int i = 0; i<cValue; i++){
+        //READ
+        char fileName[20];
+        char index[14];
+        strcpy(fileName, "imagen_");
+        sprintf(index,"%d",i+1);
+        strcat(fileName,index);
+        pixelMatrix pixels = pngRead(fileName);
+        printf("\n\nFile: %s ", fileName);
+        printf("(%d,%d)\n\n",pixels.m,pixels.n);
+        for(int p = 0; p<pixels.m; p++){
+            for(int q = 0; q<pixels.n; q++){
+                printf("%3d",pixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+        //CONVOLUTION
+        floatPixelMatrix floatPixels = convolution(kernel,pixels);
+        printf("\n\nCONVOLUTION: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+
+        //RECTIFICATION
+        floatPixels = rectification(floatPixels);
+        printf("\n\nRECTIFICATION: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+
+        //POOLING
+        floatPixels = pooling(floatPixels);
+        printf("\n\nPOOLING: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+
+        //CLASSIFIER
+        floatPixels = classifier(floatPixels, nValue);
+        printf("\n\nCLASSIFIER: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+
+        //RESULTSWRITER
+        strcpy(fileName, "out_");
+        sprintf(index,"%d",i+1);
+        strcat(fileName,index);
+        resultsWriter(floatPixels, fileName, bFlag, i);
+        printf("\n\nRESULTSWRITER: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+    }
+
+    //
 }
+
+//Entradas: char* mValue: Nombre del archivo que contiene el filtro de la convolucion
+//Funcionamiento: Crea la mascara del filtro
+//Salida: --
+void preparation(char * mValue){
+    FILE * file = fopen(mValue, "r");
+    fscanf(file,"%d %d %d %d %d %d %d %d %d",&(kernel.matrix)[0][0],&(kernel.matrix)[0][1],&(kernel.matrix)[0][2],&(kernel.matrix)[1][0],&(kernel.matrix)[1][1],&(kernel.matrix)[1][2],&(kernel.matrix)[2][0],&(kernel.matrix)[2][1],&(kernel.matrix)[2][2]);
+    fclose(file);
+    for(int i = 0; i<3; i++){
+        for(int j = 0; j<3; j++){
+            printf("%d ",(kernel.matrix)[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 
 //Entradas: char* filename: Nombre de una imagen en formato .png en escala de grises
 //Funcionamiento: Lee una imagen y la guarda el largo, ancho y valor de sus pixeles en una matriz 
@@ -69,7 +163,6 @@ pixelMatrix pngRead(char * fileName){
     int rowbytes;
     //Se obtiene la cantidad de bytes necesarios para contener una fila de una imagen.
     rowbytes = png_get_rowbytes (png_ptr, info_ptr);
-
     matrizPix.m = alto;
     matrizPix.n = ancho;
     //Se recorren los punteros de la matriz pixel a pixel y se guardan en una estructura.
@@ -223,27 +316,28 @@ floatPixelMatrix pooling(floatPixelMatrix floatPixels){
     //Se adecua la matrix de pixeles agregando ceros abajo y a la derecha para que el tamaño de la matriz sea divisible por 3 
     if(floatPixels.m%3==1){
         for(int i = 0; i<floatPixels.n; i++){
+            (floatPixels.matrix)[floatPixels.m][i]=0.0;
             (floatPixels.matrix)[floatPixels.m+1][i]=0.0;
-            (floatPixels.matrix)[floatPixels.m+2][i]=0.0;
+            
         }
         floatPixels.m = floatPixels.m + 2;
     }
     else if(floatPixels.m%3==2){
         for(int i = 0; i<floatPixels.n; i++){
-            (floatPixels.matrix)[floatPixels.m+1][i]=0.0;
+            (floatPixels.matrix)[floatPixels.m][i]=0.0;
         }
         floatPixels.m = floatPixels.m + 1;
     } //el error puede estar aqui
-    else if(floatPixels.n%3==1){
+    if(floatPixels.n%3==1){
         for(int i = 0; i<floatPixels.m; i++){
+            (floatPixels.matrix)[i][floatPixels.n]=0.0;
             (floatPixels.matrix)[i][floatPixels.n+1]=0.0;
-            (floatPixels.matrix)[i][floatPixels.n+2]=0.0;
         }
         floatPixels.n = floatPixels.n + 2;
     }
     else if(floatPixels.n%3==2){
         for(int i = 0; i<floatPixels.m; i++){
-            (floatPixels.matrix)[i][floatPixels.n+1]=0.0;
+            (floatPixels.matrix)[i][floatPixels.n]=0.0;
         }
         floatPixels.n = floatPixels.n + 1;
     }
@@ -317,7 +411,7 @@ void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int 
 //Entrada: Estructura bitmap_t que contiene los pixeles, ancho y alto de la imagen/ posicion en columnas/ posicion en filas.
 //Funcionamiento: Extrae el pixel ubicado en la posicion (y,x).
 //Salida: pixel.
-static pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
+pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
 {
     return bitmap->pixels + bitmap->width * y + x;
 }
@@ -326,7 +420,7 @@ static pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
 //Funcionamiento: Inicializa todas las estructuras presentes en un archivo PNG para posteriormente ser llenado con los valores 
 //      presentes en la estructura bitmap_t.
 //Salida: un entero que indica el estado de finalizacion de la función.  
-static int save_png_to_file (bitmap_t *bitmap, const char *path)
+int save_png_to_file (bitmap_t *bitmap, const char *path)
 {
     //Definicion de variables.
     FILE * fp;
