@@ -14,7 +14,7 @@ int main(int argc, char **argv){
     int cValue=-1;
     char *mValue = NULL;
     int nValue=-1;
-    int bFlag = 0;
+    bFlag = 0;
     int hValue = 0;
     int tValue = 0;
 
@@ -24,6 +24,7 @@ int main(int argc, char **argv){
         switch (flag){
             case 'c':
                 cValue = atoi(optarg);
+                cantIma = cValue;
                 if(cValue < 1){
                     fprintf(stderr, "La bandera -c debe tener de argumento un número entero positivo.\n");
                     abort();
@@ -49,6 +50,7 @@ int main(int argc, char **argv){
                 break;
             case 't':
                 tValue = atoi(optarg);
+                tamanoB = tValue;
                 if(tValue < 1){
                     fprintf(stderr, "La bandera -t debe tener de argumento un número entero mayor a 0. \n");
                     abort();
@@ -56,6 +58,7 @@ int main(int argc, char **argv){
                 break;
             case 'h':
                 hValue = atoi(optarg);
+                cantHebras = hValue;
                 if(hValue < 1){
                     fprintf(stderr, "La bandera -h debe tener de argumento un número entero mayor a 0. \n");
                     abort();

@@ -5,11 +5,175 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
+
 #include <png.h>
 #include <errno.h>
 #include <stdarg.h>
 
 #include "main.h"
+
+
+void* prod(void* param){
+	//AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
+	pthread_mutex_lock(&p);
+	int i;
+	for(i=0;i<pixels.m;i++){ //Cantidad de filas
+		if(entra == (tamanoB - 1)){
+			printf("buffer llenito\n");
+			buffer[entra] = (pixels.matrix)[i];
+			//rintf("Valor entra: %d\n", entra);
+			entra=0;
+			sale = 0;
+			if(vez == 1){
+				vez = 0;
+				pthread_mutex_unlock(&c);
+				pthread_mutex_lock(&p);
+			}else if ((i+1) == pixels.m){ //Si es la ultima hebra
+				//printf("finalizando\n");
+				finish = 1;
+				pthread_mutex_unlock(&l);
+			}else{
+				pthread_mutex_unlock(&l);
+				pthread_mutex_lock(&p);
+			}
+			//printf("%d\n", sale);
+		}else if ((i+1) == pixels.m){
+				entra = 0;
+				sale=0;
+				//printf("finalizando\n");
+				finish = 1;
+				pthread_mutex_unlock(&l);
+		}
+		else{
+			buffer[entra] =  (pixels.matrix)[i];
+			//printf("entra: %d\n", entra);
+			entra++;
+		}
+	}
+	//printf("terminando pro\n");
+	pthread_mutex_unlock(&c);
+	//pthread_mutex_lock(&p);
+	//printf("termino produ\n");
+	return NULL;
+}
+
+//Consume la cantidad q le corresponde a la hebra, es la variable cor (de prueba puse 4)
+void* consum(void* param){
+	//AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
+    
+	pthread_mutex_lock(&c);
+	pixelMatrixThread matrizAux;
+    matrizAux.m = filasPorHebra;
+    matrizAux.n = pixels.n;
+	int cor=filasPorHebra;
+	int x;
+	int j;
+	while(x<cor){
+		if(sale == (tamanoB - 1)){
+			matrizAux.matrix[x] = buffer[sale];
+			//printf("sale: %d\n", sale);
+			//printf("x: %d\n", x);
+			if(finish == 1){
+				x = cor;
+				//printf("cor\n");
+			}
+			else{
+				pthread_mutex_unlock(&p);
+				pthread_mutex_lock(&l);
+			}
+			//while(sale != 0);
+		}
+		else{
+			(matrizAux->matrix)[x] = buffer[sale] ;
+			sale++;
+		}
+		x++;
+	}
+	contH++;
+	int z;
+	int w;
+	printf("Hebra: %d\n", contH);
+	for(z=0;z<cor;z++){
+		for(w=0;w<pixels.m;w++){
+			printf("%d | ", (matrizAux->matrix)[z][w]);
+		}
+		printf("\n");
+	}
+	pthread_mutex_unlock(&c);
+	//printf("termino consu\n");
+	//AQUI HACIA ABAJO HAY Q AGREGAR LAS BARRERAS Y LAS ETAPAS
+
+    floatPixelMatrix floatPixels = convolution(kernel,*matrizAux);
+    printf("\n\nCONVOLUTION: ");
+    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+    for(int p = 0; p<floatPixels.m; p++){
+        for(int q = 0; q<floatPixels.n; q++){
+            printf("%3d",(int) floatPixels.matrix[p][q]);
+        }
+        printf("\n");
+    }
+    pthread_barrier_wait(&barrera1);
+
+    //RECTIFICATION
+    floatPixels = rectification(floatPixels);
+    printf("\n\nRECTIFICATION: ");
+    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+    for(int p = 0; p<floatPixels.m; p++){
+        for(int q = 0; q<floatPixels.n; q++){
+            printf("%3d",(int) floatPixels.matrix[p][q]);
+        }
+        printf("\n");
+    }
+
+    pthread_barrier_wait(&barrera2);
+
+    //POOLING
+    floatPixels = pooling(floatPixels);
+    printf("\n\nPOOLING: ");
+    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+    for(int p = 0; p<floatPixels.m; p++){
+        for(int q = 0; q<floatPixels.n; q++){
+            printf("%3d",(int) floatPixels.matrix[p][q]);
+        }
+        printf("\n");
+    }
+
+    pthread_barrier_wait(&barrera3);
+
+    //CLASSIFIER
+    floatPixels = classifier(floatPixels, nValue);
+    printf("\n\nCLASSIFIER: ");
+    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+    for(int p = 0; p<floatPixels.m; p++){
+        for(int q = 0; q<floatPixels.n; q++){
+            printf("%3d",(int) floatPixels.matrix[p][q]);
+        }
+        printf("\n");
+    }
+
+    pthread_barrier_wait(&barrera4);
+
+    //RESULTSWRITER
+    strcpy(fileName, "out_");
+    sprintf(index2,"%d",i+1);
+    strcat(fileName,index2);
+    resultsWriter(floatPixels, fileName, bFlag, i);
+    printf("\n\nRESULTSWRITER: ");
+    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+    for(int p = 0; p<floatPixels.m; p++){
+        for(int q = 0; q<floatPixels.n; q++){
+            printf("%3d",(int) floatPixels.matrix[p][q]);
+        }
+        printf("\n");
+    }
+
+    pthread_barrier_wait(&barrera5);
+
+    //pthread_barrier_destroy;
+	
+	return NULL;
+}
 
 //Entradas: int cValue: Entero positivo que indica la cantidad de imágenes a procesar
 //          char* mValue: Nombre del archivo que contiene el filtro de la convolucion
@@ -20,16 +184,15 @@
 //Funcionamiento: Primero prepara las entradas (argv) que requiere para el pipeline. Luego, 
 //Salida: --
 void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag){
+    
     preparation(mValue);
     //Pipeline
     for(int i = 0; i<cValue; i++){
         //READ
-        char fileName[20];
-        char index[14];
         strcpy(fileName, "imagen_");
-        sprintf(index,"%d",i+1);
-        strcat(fileName,index);
-        pixelMatrix pixels = pngRead(fileName);
+        sprintf(index2,"%d",i+1);
+        strcat(fileName,index2);
+        pixels = pngRead(fileName);
         printf("\n\nFile: %s ", fileName);
         printf("(%d,%d)\n\n",pixels.m,pixels.n);
         for(int p = 0; p<pixels.m; p++){
@@ -38,63 +201,52 @@ void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int
             }
             printf("\n");
         }
-        //CONVOLUTION
-        floatPixelMatrix floatPixels = convolution(kernel,pixels);
-        printf("\n\nCONVOLUTION: ");
-        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-        for(int p = 0; p<floatPixels.m; p++){
-            for(int q = 0; q<floatPixels.n; q++){
-                printf("%3d",(int) floatPixels.matrix[p][q]);
-            }
-            printf("\n");
+        int filasHebraFinal = pixels.m%cantHebras;
+	    int filasPorHebra = pixels.m/cantHebras;
+        //BUFFER
+
+        pthread_barrier_init(&barrera1, NULL, cantHebras);
+        pthread_barrier_init(&barrera2, NULL, cantHebras);
+        pthread_barrier_init(&barrera3, NULL, cantHebras);
+        pthread_barrier_init(&barrera4, NULL, cantHebras);
+        pthread_barrier_init(&barrera5, NULL, cantHebras);
+
+        pthread_mutex_init(&c,NULL);
+        pthread_mutex_init(&p,NULL);
+        pthread_mutex_init(&l,NULL);
+
+        pthread_mutex_lock(&c);
+        pthread_mutex_lock(&l);
+
+        contIma=0;
+        entra = 0;
+        sale = 0;
+        contH = 0;
+        vez = 1;
+        finish = 0;
+        pthread_t produ;
+        pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * cantHebras);
+        buffer= (int**)malloc((sizeof(int*))*tamanoB);
+
+        pthread_create(&produ,NULL,prod,(void*) 1);
+
+        int i;
+        for(i=0;i<cantHebras;i++){
+            pthread_create(&threads[i],NULL, consum, (void*) 1);
         }
 
-        //RECTIFICATION
-        floatPixels = rectification(floatPixels);
-        printf("\n\nRECTIFICATION: ");
-        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-        for(int p = 0; p<floatPixels.m; p++){
-            for(int q = 0; q<floatPixels.n; q++){
-                printf("%3d",(int) floatPixels.matrix[p][q]);
-            }
-            printf("\n");
+        int j;
+        for(j=0;j<cantHebras;j++){
+            pthread_join(threads[j], NULL);
         }
 
-        //POOLING
-        floatPixels = pooling(floatPixels);
-        printf("\n\nPOOLING: ");
-        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-        for(int p = 0; p<floatPixels.m; p++){
-            for(int q = 0; q<floatPixels.n; q++){
-                printf("%3d",(int) floatPixels.matrix[p][q]);
-            }
-            printf("\n");
-        }
-
-        //CLASSIFIER
-        floatPixels = classifier(floatPixels, nValue);
-        printf("\n\nCLASSIFIER: ");
-        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-        for(int p = 0; p<floatPixels.m; p++){
-            for(int q = 0; q<floatPixels.n; q++){
-                printf("%3d",(int) floatPixels.matrix[p][q]);
-            }
-            printf("\n");
-        }
-
-        //RESULTSWRITER
-        strcpy(fileName, "out_");
-        sprintf(index,"%d",i+1);
-        strcat(fileName,index);
-        resultsWriter(floatPixels, fileName, bFlag, i);
-        printf("\n\nRESULTSWRITER: ");
-        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-        for(int p = 0; p<floatPixels.m; p++){
-            for(int q = 0; q<floatPixels.n; q++){
-                printf("%3d",(int) floatPixels.matrix[p][q]);
-            }
-            printf("\n");
-        }
+        pthread_join(produ,NULL);
+        //////
+        pthread_barrier_destroy(&barrera1);
+        pthread_barrier_destroy(&barrera2);
+        pthread_barrier_destroy(&barrera3);
+        pthread_barrier_destroy(&barrera4);
+        pthread_barrier_destroy(&barrera5);
     }
 
     //
@@ -119,7 +271,7 @@ void preparation(char * mValue){
 //Entradas: char* filename: Nombre de una imagen en formato .png en escala de grises
 //Funcionamiento: Lee una imagen y la guarda el largo, ancho y valor de sus pixeles en una matriz 
 //Salida: estructura pixelMatrix que contiene largo, ancho y matriz de pixeles de la imagen
-pixelMatrix pngRead(char * fileName){
+pixelMatrixImage pngRead(char * fileName){
 	//definicion de variables
     png_structp	png_ptr;
     png_infop info_ptr;
@@ -133,7 +285,7 @@ pixelMatrix pngRead(char * fileName){
     int metFiltro;
     int x;
     png_bytepp rows;
-    pixelMatrix matrizPix;
+    pixelMatrixImage matrizPix;
 
     //apertura del archivo (imagen) para lectura en binario
     fp = fopen (fileName, "rb");
@@ -189,7 +341,7 @@ pixelMatrix pngRead(char * fileName){
 //			pixelMatrix pixels: Respresenta una imagen 
 //Funcionamiento: Se recorre la matriz de los valores de los pixeles aplicando el concepto de convolucion haciendo uso de una matriz de numeros (kernel) para generar una nueva matriz normalizada.
 //Salida: floatPixelMatrix que representa una matriz de flotantes que contiene los valores normalizados.
-floatPixelMatrix convolution(kernelMatrix kernel, pixelMatrix pixels){
+floatPixelMatrix convolution(kernelMatrix kernel, pixelMatrixThread pixels){
 	floatPixelMatrix floatPixels;
 	floatPixels.m = pixels.m;
 	floatPixels.n = pixels.n;
