@@ -13,65 +13,93 @@
 
 #include "main.h"
 
-
-void* prod(void* param){
+//REVISAR CONDICION CUANDO PASAMOS A LA SIGUIENTE IMAGEN
+/*void* prod(void* param){
 	//AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
-	pthread_mutex_lock(&p);
-	int i;
-	for(i=0;i<pixels.m;i++){ //Cantidad de filas
-		if(entra == (tamanoB - 1)){
-			printf("buffer llenito\n");
-			buffer[entra] = (pixels.matrix)[i];
-			//rintf("Valor entra: %d\n", entra);
-			entra=0;
-			sale = 0;
-			if(vez == 1){
-				vez = 0;
-				pthread_mutex_unlock(&c);
-				pthread_mutex_lock(&p);
-			}else if ((i+1) == pixels.m){ //Si es la ultima hebra
-				//printf("finalizando\n");
-				finish = 1;
-				pthread_mutex_unlock(&l);
-			}else{
-				pthread_mutex_unlock(&l);
-				pthread_mutex_lock(&p);
-			}
-			//printf("%d\n", sale);
-		}else if ((i+1) == pixels.m){
-				entra = 0;
-				sale=0;
-				//printf("finalizando\n");
-				finish = 1;
-				pthread_mutex_unlock(&l);
-		}
-		else{
-			buffer[entra] =  (pixels.matrix)[i];
-			//printf("entra: %d\n", entra);
-			entra++;
-		}
-	}
-	//printf("terminando pro\n");
-	pthread_mutex_unlock(&c);
-	//pthread_mutex_lock(&p);
-	//printf("termino produ\n");
+	while(contIma < cantIma){
+        pthread_mutex_lock(&p);
+        //Pipeline
+        //READ
+        strcpy(fileName, "imagen_");
+        sprintf(index2,"%d",i+1);
+        strcat(fileName,index2);
+        pixels = pngRead(fileName);
+        printf("\n\nFile: %s ", fileName);
+        printf("(%d,%d)\n\n",pixels.m,pixels.n);
+        for(int p = 0; p<pixels.m; p++){
+            for(int q = 0; q<pixels.n; q++){
+                printf("%3d",pixels.matrix[p][q]);
+            }
+            printf("\n");
+        }
+        
+        
+        cantFilas = pixels.m;
+        cantCol = pixels.n;
+        filasPorHebra = cantFilas/cantHebras;
+        filasHebraFinal = cantFilas - ((filasPorHebra - 1) * cantHebras);
+
+
+        int i;
+        for(i=0;i<pixels.m;i++){ //Cantidad de filas
+            if(entra == (tamanoB - 1)){
+                printf("buffer llenito\n");
+                buffer[entra] = pixels.matrix[i];
+                //rintf("Valor entra: %d\n", entra);
+                entra=0;
+                sale = 0;
+                if(vez == 1){
+                    vez = 0;
+                    pthread_mutex_unlock(&c);
+                    pthread_mutex_lock(&p);
+                }else if ((i+1) == pixels.m){ //Si es la ultima fila de la imagen
+                    //printf("finalizando\n");
+                    finish = 1;
+                    pthread_mutex_unlock(&l);
+                }else{
+                    pthread_mutex_unlock(&l);
+                    pthread_mutex_lock(&p);
+                }
+                //printf("%d\n", sale);
+            }else if ((i+1) == pixels.m){
+                entra = 0;
+                sale=0;
+                //printf("finalizando\n");
+                finish = 1;
+                pthread_mutex_unlock(&l);
+            }
+            else{
+                buffer[entra] =  pixels.matrix[i];
+                //printf("entra: %d\n", entra);
+                entra++;
+            }
+        }
+        //printf("terminando pro\n");
+        pthread_mutex_unlock(&c);
+        //pthread_mutex_lock(&p);
+        //printf("termino produ\n");
+    }
+    
 	return NULL;
-}
+}*/
 
 //Consume la cantidad q le corresponde a la hebra, es la variable cor (de prueba puse 4)
-void* consum(void* param){
+/*void* consum(void* param){
 	//AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
     
 	pthread_mutex_lock(&c);
-	pixelMatrixThread matrizAux;
-    matrizAux.m = filasPorHebra;
-    matrizAux.n = pixels.n;
-	int cor=filasPorHebra;
+    contH++;
+    int cor;
+    if(contH == cantHebras){
+       cor = filasHebraFinal;
+    }else{
+        cor = filasPorHebra;
+    }
+	int** matrizAux= (int**)malloc((sizeof(int*)) * cor);
 	int x;
-	int j;
 	while(x<cor){
 		if(sale == (tamanoB - 1)){
-			matrizAux.matrix[x] = buffer[sale];
+			matrizAux[x] = buffer[sale];
 			//printf("sale: %d\n", sale);
 			//printf("x: %d\n", x);
 			if(finish == 1){
@@ -85,25 +113,24 @@ void* consum(void* param){
 			//while(sale != 0);
 		}
 		else{
-			(matrizAux->matrix)[x] = buffer[sale] ;
+			matrizAux[x] = buffer[sale] ;
 			sale++;
 		}
 		x++;
 	}
-	contH++;
 	int z;
 	int w;
 	printf("Hebra: %d\n", contH);
 	for(z=0;z<cor;z++){
-		for(w=0;w<pixels.m;w++){
-			printf("%d | ", (matrizAux->matrix)[z][w]);
+		for(w=0;w<cantCol;w++){
+			printf("%d | ", matrizAux[z][w]);
 		}
 		printf("\n");
 	}
 	pthread_mutex_unlock(&c);
 	//printf("termino consu\n");
 	//AQUI HACIA ABAJO HAY Q AGREGAR LAS BARRERAS Y LAS ETAPAS
-
+/*
     floatPixelMatrix floatPixels = convolution(kernel,*matrizAux);
     printf("\n\nCONVOLUTION: ");
     printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
@@ -170,10 +197,10 @@ void* consum(void* param){
 
     pthread_barrier_wait(&barrera5);
 
-    //pthread_barrier_destroy;
+    //pthread_barrier_destroy;*/
 	
-	return NULL;
-}
+	//return NULL;
+//}
 
 //Entradas: int cValue: Entero positivo que indica la cantidad de imágenes a procesar
 //          char* mValue: Nombre del archivo que contiene el filtro de la convolucion
@@ -183,9 +210,9 @@ void* consum(void* param){
 //          int hValue: Entero mayor a 0 que representa el tamaño del buffer
 //Funcionamiento: Primero prepara las entradas (argv) que requiere para el pipeline. Luego, 
 //Salida: --
-void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag){
+/*void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag){
     
-    preparation(mValue);
+    preparation(mValue); //Se abre el archivo txt con el kernel y se crea el kernel
     //Pipeline
     for(int i = 0; i<cValue; i++){
         //READ
@@ -201,17 +228,18 @@ void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int
             }
             printf("\n");
         }
-        int filasHebraFinal = pixels.m%cantHebras;
-	    int filasPorHebra = pixels.m/cantHebras;
+        int filasPorHebra = pixels.m/cantHebras;
+        int filasHebraFinal = pixels.m - ((filasPorHebra - 1) * cantHebras);
+	    
         //BUFFER
 
-        pthread_barrier_init(&barrera1, NULL, cantHebras);
-        pthread_barrier_init(&barrera2, NULL, cantHebras);
+        pthread_barrier_init(&barrera, NULL, cantHebras);
+        /*pthread_barrier_init(&barrera2, NULL, cantHebras);
         pthread_barrier_init(&barrera3, NULL, cantHebras);
         pthread_barrier_init(&barrera4, NULL, cantHebras);
-        pthread_barrier_init(&barrera5, NULL, cantHebras);
+        pthread_barrier_init(&barrera5, NULL, cantHebras);*/
 
-        pthread_mutex_init(&c,NULL);
+        /*pthread_mutex_init(&c,NULL);
         pthread_mutex_init(&p,NULL);
         pthread_mutex_init(&l,NULL);
 
@@ -242,15 +270,15 @@ void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int
 
         pthread_join(produ,NULL);
         //////
-        pthread_barrier_destroy(&barrera1);
-        pthread_barrier_destroy(&barrera2);
+        pthread_barrier_destroy(&barrera);
+        /*pthread_barrier_destroy(&barrera2);
         pthread_barrier_destroy(&barrera3);
         pthread_barrier_destroy(&barrera4);
-        pthread_barrier_destroy(&barrera5);
-    }
+        pthread_barrier_destroy(&barrera5);*/
+    //}
 
     //
-}
+//}
 
 //Entradas: char* mValue: Nombre del archivo que contiene el filtro de la convolucion
 //Funcionamiento: Crea la mascara del filtro
@@ -326,7 +354,7 @@ pixelMatrixImage pngRead(char * fileName){
         png_byte pixel;
         pixel = row[y];
         //printf("%d", pixel);
-        (matrizPix.matrix)[x][y] = (int) pixel;
+        matrizPix.matrix[x][y] = (int) pixel;
         
       }
 		//printf ("\n");

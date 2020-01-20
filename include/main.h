@@ -45,11 +45,11 @@ bitmap_t;
 kernelMatrix kernel; //Read only
 int classificationCounter;
 //Shared variables threads
-pthread_barrier_t barrera1;
-pthread_barrier_t barrera2;
+pthread_barrier_t barrera;
+/*pthread_barrier_t barrera2;
 pthread_barrier_t barrera3;
 pthread_barrier_t barrera4;
-pthread_barrier_t barrera5;
+pthread_barrier_t barrera5;*/
 pthread_mutex_t c;
 pthread_mutex_t p;
 pthread_mutex_t l;
@@ -61,12 +61,14 @@ int** buffer;
 int entra;
 int sale;
 int** matrizprueba;
-pixelMatrixThread * matrizAux; 
+int filasHebraFinal;
+int filasPorHebra;
+//pixelMatrixThread * matrizAux; 
 int contH;
 int vez;
 int finish;
-int filasPorHebra;
-int filasUltimaHebra;
+int cantFilas;
+int cantCol;
 pixelMatrixImage pixels;
 char fileName[20];
 char index2[14];
