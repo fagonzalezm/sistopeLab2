@@ -32,7 +32,7 @@ void* prod(void* param){
         cantFilas = pixels.m;
         cantCol = pixels.n;
         filasPorHebra = cantFilas/cantHebras;
-        filasHebraFinal = cantFilas - ((filasPorHebra - 1) * cantHebras);
+        filasHebraFinal = filasPorHebra + (cantFilas - (filasPorHebra * cantHebras));
 
 
         int i;
@@ -118,6 +118,7 @@ void* consum(void* param){
     int z;
     int w;
     printf("Hebra: %d\n", contH);
+    printf("Cor: %d\n", cor);
     for(z=0;z<cor;z++){
         for(w=0;w<cantCol;w++){
             printf("%d | ", matrizAux[z][w]);
