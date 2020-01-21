@@ -58,6 +58,7 @@ int tamanoB;
 int cantIma;
 int contIma;
 int** buffer;
+int bar;
 int entra;
 int sale;
 int** matrizprueba;
