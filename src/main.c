@@ -22,8 +22,9 @@ void* prod(void* param){
         printf("\n\nFile: %s ", fileName);
         printf("(%d,%d)\n\n",pixels.m,pixels.n);
         int g;
+        int q;
         for(g = 0; g<pixels.m; g++){
-            for(int q = 0; q<pixels.n; q++){
+            for(q = 0; q<pixels.n; q++){
                 printf("%3d",pixels.matrix[g][q]);
             }
             printf("\n");
