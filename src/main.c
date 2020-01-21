@@ -165,6 +165,7 @@ void* consum(void* param){
             contH = 0;
             finish = 0;
         }
+        pthread_mutex_lock(&et2);
         //PIPELINE
         //printf("#########  CONVOLUTION  ##########\n");
         for(z = 0; z<cor; z++){
@@ -178,6 +179,7 @@ void* consum(void* param){
             }
             printf("\n");
         }
+        pthread_mutex_unlock(&et2);
         /*for(int e=0;e<cantCol;w++){
             printf("%3f", localFloatPixel[e]);
         }*/
@@ -386,6 +388,7 @@ int main(int argc, char **argv){
         pthread_mutex_init(&c,NULL);
         pthread_mutex_init(&p,NULL);
         pthread_mutex_init(&l,NULL);
+        pthread_mutex_init(&et2,NULL);
 
         pthread_mutex_lock(&c);
         pthread_mutex_lock(&l);

@@ -53,6 +53,7 @@ pthread_barrier_t barrera5;*/
 pthread_mutex_t c;
 pthread_mutex_t p;
 pthread_mutex_t l;
+pthread_mutex_t et2;
 int cantHebras;
 int tamanoB;
 int cantIma;
