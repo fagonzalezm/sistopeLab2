@@ -76,7 +76,17 @@ void* prod(void* param){
             }
         }
 
-        pthread_mutex_unlock(&c);
+        if(auxHebra == cantHebras){
+            printf("soy prod y ya pasaron todas las hebras cons\n");
+        }else if(auxHebra < cantHebras){
+            pthread_mutex_unlock(&c);
+        }else{
+
+        }
+        printf("terminamos un ciclo while\n");
+        pthread_mutex_lock(&wh);
+        printf("pasamos el lock w\n");
+        //pthread_mutex_unlock(&c);
         //pthread_mutex_lock(&p);
         
         //while(turno != contH);
@@ -100,7 +110,10 @@ void* consum(void* param){
         printf("cruzado loc c\n");
         printf("cantIma%d\n", cantIma );
         contH++;
+        auxHebra++;
         int cor;
+        int id;
+        id = contH;
         if(contH == cantHebras){
             printf("last hebra\n");
             cor = filasHebraFinal;
@@ -148,10 +161,10 @@ void* consum(void* param){
         if(contH == cantHebras){
             printf("termino la ejecucion de todas las hebras cons\n");
             contIma = contIma + 1;
-            if (cantIma != contIma){
-                pthread_mutex_unlock(&p);
-                pthread_mutex_lock(&c);
-            }
+            //if (cantIma != contIma){
+              //  pthread_mutex_unlock(&p);
+                //pthread_mutex_lock(&c);
+            //}
         }else{
             printf("abrimos paso a la sigueinte cons\n");
             pthread_mutex_unlock(&c);
@@ -159,12 +172,17 @@ void* consum(void* param){
         pthread_barrier_wait(&barrera);
         //printf("pasamos barrera\n");
         //printf("cont ima: %d\n", contIma);
-        if(bar == 1){
+        /*if((bar == 1) && (id == 1)){
             bar = 0;
             vez = 1;
             contH = 0;
             finish = 0;
-        }
+            printf("bar\n");
+            pthread_mutex_unlock(&wh);
+            printf("wh desbloqueado\n");
+            pthread_mutex_unlock(&p);
+            printf("desbloqueaos p\n");
+        }*/
         //pthread_mutex_lock(&et2);
         //PIPELINE
         //printf("#########  CONVOLUTION  ##########\n");
@@ -200,6 +218,18 @@ void* consum(void* param){
 
         pthread_barrier_wait(&barrera);
         //printf("#########  CLASSIFIER  ##########\n");
+
+        if((bar == 1) && (id == 1)){
+            bar = 0;
+            vez = 1;
+            contH = 0;
+            finish = 0;
+            printf("bar\n");
+            pthread_mutex_unlock(&wh);
+            printf("wh desbloqueado\n");
+            pthread_mutex_unlock(&p);
+            printf("desbloqueaos p\n");
+        }
     }
     if (cantIma == contIma){
         printf("fuera del while cons\n");
@@ -404,10 +434,12 @@ int main(int argc, char **argv){
         pthread_mutex_init(&c,NULL);
         pthread_mutex_init(&p,NULL);
         pthread_mutex_init(&l,NULL);
+        pthread_mutex_init(&wh,NULL);
         pthread_mutex_init(&et2,NULL);
 
         pthread_mutex_lock(&c);
         pthread_mutex_lock(&l);
+        pthread_mutex_lock(&wh);
 
         contIma=0;
         entra = 0;
@@ -416,6 +448,7 @@ int main(int argc, char **argv){
         vez = 1;
         finish = 0;
         turno = 0;
+        auxHebra = 0;
         pthread_t produ;
         pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * cantHebras);
         buffer= (int**)malloc((sizeof(int*))*tamanoB);
