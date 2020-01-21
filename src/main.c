@@ -24,9 +24,11 @@ void* prod(void* param){
         pixels = pngRead(fileName);
         printf("\n\nFile: %s ", fileName);
         printf("(%d,%d)\n\n",pixels.m,pixels.n);
-        for(int p = 0; p<pixels.m; p++){
-            for(int q = 0; q<pixels.n; q++){
-                printf("%3d",pixels.matrix[p][q]);
+        int g;
+        int q;
+        for(g = 0; g<pixels.m; g++){
+            for(q = 0; q<pixels.n; q++){
+                printf("%3d",pixels.matrix[g][q]);
             }
             printf("\n");
         }
@@ -98,35 +100,47 @@ void* prod(void* param){
 //Consume la cantidad q le corresponde a la hebra, es la variable cor (de prueba puse 4)
 void* consum(void* param){
     //AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
-    
-    pthread_mutex_lock(&c);
-    contH++;
-    int cor;
-    if(contH == cantHebras){
-       cor = filasHebraFinal;
-    }else{
-        cor = filasPorHebra;
-    }
-    int** matrizAux= (int**)malloc((sizeof(int*)) * cor);
-    int x;
-    while(x<cor){
-        if(sale == (tamanoB - 1)){
-            matrizAux[x] = buffer[sale];
-            //printf("sale: %d\n", sale);
-            //printf("x: %d\n", x);
-            if(finish == 1){
-                x = cor;
-                //printf("cor\n");
+    while(contIma < cantIma){
+        pthread_mutex_lock(&c);
+        contH++;
+        int cor;
+        if(contH == cantHebras){
+            cor = filasHebraFinal;
+        }else{
+            cor = filasPorHebra;
+        }
+        int** matrizAux= (int**)malloc((sizeof(int*)) * cor);
+        int x;
+        while(x<cor){
+            if(sale == (tamanoB - 1)){
+                matrizAux[x] = buffer[sale];
+                //printf("sale: %d\n", sale);
+                //printf("x: %d\n", x);
+                if(finish == 1){
+                    x = cor;
+                    //printf("cor\n");
+                }
+                else{
+                    pthread_mutex_unlock(&p);
+                    pthread_mutex_lock(&l);
+                }
+                //while(sale != 0);
             }
             else{
-                pthread_mutex_unlock(&p);
-                pthread_mutex_lock(&l);
+                matrizAux[x] = buffer[sale] ;
+                sale++;
             }
-            //while(sale != 0);
+            x++;
         }
-        else{
-            matrizAux[x] = buffer[sale] ;
-            sale++;
+        int z;
+        int w;
+        printf("Hebra: %d\n", contH);
+        printf("Cor: %d\n", cor);
+        for(z=0;z<cor;z++){
+            for(w=0;w<cantCol;w++){
+                printf("%d | ", matrizAux[z][w]);
+            }
+            printf("\n");
         }
         x++;
     }
@@ -138,77 +152,75 @@ void* consum(void* param){
         for(w=0;w<cantCol;w++){
             printf("%3d", matrizAux[z][w]);
         }
-        printf("\n");
-    }
-    pthread_mutex_unlock(&c);
-    //printf("termino consu\n");
-    //AQUI HACIA ABAJO HAY Q AGREGAR LAS BARRERAS Y LAS ETAPAS
+    
+        //printf("termino consu\n");
+        //AQUI HACIA ABAJO HAY Q AGREGAR LAS BARRERAS Y LAS ETAPAS
 /*
-    floatPixelMatrix floatPixels = convolution(kernel,*matrizAux);
-    printf("\n\nCONVOLUTION: ");
-    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-    for(int p = 0; p<floatPixels.m; p++){
-        for(int q = 0; q<floatPixels.n; q++){
-            printf("%3d",(int) floatPixels.matrix[p][q]);
+        floatPixelMatrix floatPixels = convolution(kernel,*matrizAux);
+        printf("\n\nCONVOLUTION: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
-    pthread_barrier_wait(&barrera1);
+        pthread_barrier_wait(&barrera1);
 
-    //RECTIFICATION
-    floatPixels = rectification(floatPixels);
-    printf("\n\nRECTIFICATION: ");
-    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-    for(int p = 0; p<floatPixels.m; p++){
-        for(int q = 0; q<floatPixels.n; q++){
-            printf("%3d",(int) floatPixels.matrix[p][q]);
+        //RECTIFICATION
+        floatPixels = rectification(floatPixels);
+        printf("\n\nRECTIFICATION: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 
-    pthread_barrier_wait(&barrera2);
+        pthread_barrier_wait(&barrera2);
 
-    //POOLING
-    floatPixels = pooling(floatPixels);
-    printf("\n\nPOOLING: ");
-    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-    for(int p = 0; p<floatPixels.m; p++){
-        for(int q = 0; q<floatPixels.n; q++){
-            printf("%3d",(int) floatPixels.matrix[p][q]);
+        //POOLING
+        floatPixels = pooling(floatPixels);
+        printf("\n\nPOOLING: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 
-    pthread_barrier_wait(&barrera3);
+        pthread_barrier_wait(&barrera3);
 
-    //CLASSIFIER
-    floatPixels = classifier(floatPixels, nValue);
-    printf("\n\nCLASSIFIER: ");
-    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-    for(int p = 0; p<floatPixels.m; p++){
-        for(int q = 0; q<floatPixels.n; q++){
-            printf("%3d",(int) floatPixels.matrix[p][q]);
+        //CLASSIFIER
+        floatPixels = classifier(floatPixels, nValue);
+        printf("\n\nCLASSIFIER: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 
-    pthread_barrier_wait(&barrera4);
+        pthread_barrier_wait(&barrera4);
 
-    //RESULTSWRITER
-    strcpy(fileName, "out_");
-    sprintf(index2,"%d",i+1);
-    strcat(fileName,index2);
-    resultsWriter(floatPixels, fileName, bFlag, i);
-    printf("\n\nRESULTSWRITER: ");
-    printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
-    for(int p = 0; p<floatPixels.m; p++){
-        for(int q = 0; q<floatPixels.n; q++){
-            printf("%3d",(int) floatPixels.matrix[p][q]);
+        //RESULTSWRITER
+        strcpy(fileName, "out_");
+        sprintf(index2,"%d",i+1);
+        strcat(fileName,index2);
+        resultsWriter(floatPixels, fileName, bFlag, i);
+        printf("\n\nRESULTSWRITER: ");
+        printf("(%d,%d)\n\n",floatPixels.m,floatPixels.n);
+        for(int p = 0; p<floatPixels.m; p++){
+            for(int q = 0; q<floatPixels.n; q++){
+                printf("%3d",(int) floatPixels.matrix[p][q]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 
-    pthread_barrier_wait(&barrera5);
+        pthread_barrier_wait(&barrera5);
 
     //pthread_barrier_destroy;*/
     ////pthread_barrier_wait(&barrera);
