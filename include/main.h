@@ -80,7 +80,7 @@ int turno;
 //Functions
 void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag);
 pixelMatrixImage pngRead(char * fileName);
-floatPixelMatrix convolution(kernelMatrix kernel, pixelMatrixThread pixels);
+float * convolution(kernelMatrix kernel, int * pixels, int cantCol);
 void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int countImage);
 floatPixelMatrix rectification(floatPixelMatrix floatPixels);
 floatPixelMatrix pooling(floatPixelMatrix floatPixels);

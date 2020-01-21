@@ -369,97 +369,117 @@ pixelMatrixImage pngRead(char * fileName){
 //			pixelMatrix pixels: Respresenta una imagen 
 //Funcionamiento: Se recorre la matriz de los valores de los pixeles aplicando el concepto de convolucion haciendo uso de una matriz de numeros (kernel) para generar una nueva matriz normalizada.
 //Salida: floatPixelMatrix que representa una matriz de flotantes que contiene los valores normalizados.
-floatPixelMatrix convolution(kernelMatrix kernel, pixelMatrixThread pixels){
-	floatPixelMatrix floatPixels;
-	floatPixels.m = pixels.m;
-	floatPixels.n = pixels.n;
-
+float * convolution(kernelMatrix kernel, int * pixels, int cantCol){
+    float * floatPixels;
+    floatPixels = (float*)malloc(sizeof(float)*cantCol);
+    
 	int fila;
 	int columna;
-	for(fila=0;fila<pixels.m;fila++){
-		for(columna=0;columna<pixels.n;columna++){
-			float resultado = 0;
-			int s1 = 0;
-			int s2 = 0;
-			int s3 = 0;
-			int s4 = 0;
-			int s5 = 0;
-			int s6 = 0;
-			int s7 = 0;
-			int s8 = 0;
-			int s9 = 0;
-			if((fila == 0) && (columna==0)){
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-				s9 = (pixels.matrix[fila +1][columna +1] * (kernel.matrix)[2][2]);
-			}
-			else if ((fila == (pixels.m - 1)) && (columna == 0)){
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s3 = (pixels.matrix[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-			}
-			else if((fila == 0) && (columna == (pixels.n - 1))){
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s7 = (pixels.matrix[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-			}
-			else if ((fila == (pixels.m - 1)) && (columna == (pixels.n - 1))){
-				s1 = (pixels.matrix[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-			}
-			else if (columna == 0){
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s3 = (pixels.matrix[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-				s9 = (pixels.matrix[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
-			}
-			else if (fila == 0){
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-				s7 = (pixels.matrix[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-				s9 = (pixels.matrix[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
-			}
-			else if (columna == (pixels.n - 1)){
-				s1 = (pixels.matrix[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s7 = (pixels.matrix[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-			}
-			else if (fila == (pixels.m - 1)){
-				s1 = (pixels.matrix[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s3 = (pixels.matrix[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-			}
-			else {
-				s1 = (pixels.matrix[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
-				s2 = (pixels.matrix[fila - 1][columna] * (kernel.matrix)[0][1]);
-				s3 = (pixels.matrix[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
-				s4 = (pixels.matrix[fila][columna - 1] * (kernel.matrix)[1][0]);
-				s5 = (pixels.matrix[fila][columna] * (kernel.matrix)[1][1]);
-				s6 = (pixels.matrix[fila][columna + 1] * (kernel.matrix)[1][2]);
-				s7 = (pixels.matrix[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
-				s8 = (pixels.matrix[fila + 1][columna] * (kernel.matrix)[2][1]);
-				s9 = (pixels.matrix[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
-			}
-			resultado = (s1 + s2 +s3 +s4 +s5 +s6 +s7 +s8 +s9);
-			(floatPixels.matrix)[fila][columna] = resultado / 9.0;
-		}
-	}
-
+    for(columna=0;columna<cantCol;columna++){
+        float resultado = 0;
+        int s1 = 0;
+        int s2 = 0;
+        int s3 = 0;
+        int s4 = 0;
+        int s5 = 0;
+        int s6 = 0;
+        int s7 = 0;
+        int s8 = 0;
+        int s9 = 0;
+        if((fila == 0) && (columna==0)){
+            //printf("conv: 1\n");
+            //printf("columna: %d\n",columna);
+            //printf("pixels[columna]: %d\n", pixels[columna]);
+            //printf("(kernel.matrix)[1][1]: %d\n", (kernel.matrix)[1][1]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            //printf("s5\n");
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //s9 = (pixels[fila +1][columna +1] * (kernel.matrix)[2][2]);
+            //printf("conv: 1\n");
+        }
+        else if ((fila == (1 - 1)) && (columna == 0)){
+            //printf("conv: 2\n");
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            //s3 = (pixels[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //printf("conv: 2\n");
+        }
+        else if((fila == 0) && (columna == (cantCol - 1))){
+            //printf("conv: 3\n");
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            //s7 = (pixels[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //printf("conv: 3\n");
+        }
+        else if ((fila == (1 - 1)) && (columna == (cantCol - 1))){
+            //printf("conv: 4\n");
+            //s1 = (pixels[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            //printf("conv: 4\n");
+        }
+        else if (columna == 0){
+            //printf("conv: 5\n");
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            //s3 = (pixels[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //s9 = (pixels[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
+            //printf("conv: 5\n");
+        }
+        else if (fila == 0){
+            //printf("conv: 6\n");
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //s7 = (pixels[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //s9 = (pixels[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
+            //printf("conv: 6\n");
+        }
+        else if (columna == (cantCol - 1)){
+            //printf("conv: 7\n");
+            //s1 = (pixels[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            //s7 = (pixels[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //printf("conv: 7\n");
+        }
+        else if (fila == (1 - 1)){
+            //printf("conv: 8\n");
+            //s1 = (pixels[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            //s3 = (pixels[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //printf("conv: 8\n");
+        }
+        else {
+            //printf("conv: 9\n");
+            //s1 = (pixels[fila - 1][columna - 1] * (kernel.matrix)[0][0]);
+            //s2 = (pixels[fila - 1][columna] * (kernel.matrix)[0][1]);
+            //s3 = (pixels[fila - 1][columna + 1] * (kernel.matrix)[0][2]);
+            s4 = (pixels[columna - 1] * (kernel.matrix)[1][0]);
+            s5 = (pixels[columna] * (kernel.matrix)[1][1]);
+            s6 = (pixels[columna + 1] * (kernel.matrix)[1][2]);
+            //s7 = (pixels[fila + 1][columna - 1] * (kernel.matrix)[2][0]);
+            //s8 = (pixels[fila + 1][columna] * (kernel.matrix)[2][1]);
+            //s9 = (pixels[fila + 1][columna + 1] * (kernel.matrix)[2][2]);
+            //printf("conv: 9\n");
+        }
+        //printf("CASI FIN CONVOLUCION\n");
+        resultado = (s1 + s2 +s3 +s4 +s5 +s6 +s7 +s8 +s9);
+        //printf("RESULTADO: %f\n", resultado/9.0);
+        floatPixels[columna] = resultado / 9.0;
+    }
 	return floatPixels;
 }
 

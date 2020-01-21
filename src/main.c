@@ -108,6 +108,7 @@ void* consum(void* param){
             cor = filasPorHebra;
         }
         int** matrizAux= (int**)malloc((sizeof(int*)) * cor);
+        float** floatMatrizAux= (float**)malloc((sizeof(float*)) * cor);
         int x=0;
         while(x<cor){
             //printf("x: %d\n", x);
@@ -156,15 +157,31 @@ void* consum(void* param){
             pthread_mutex_unlock(&c);
         }
         pthread_barrier_wait(&barrera);
-        printf("pasamos barrera\n");
-        printf("cont ima: %d\n", contIma);
+        //printf("pasamos barrera\n");
+        //printf("cont ima: %d\n", contIma);
         if(bar == 1){
             bar = 0;
             vez = 1;
             contH = 0;
             finish = 0;
         }
-        
+        //PIPELINE
+        //printf("#########  CONVOLUTION  ##########\n");
+        for(z = 0; z<cor; z++){
+            float * localFloatPixel = convolution(kernel, matrizAux[z], cantCol);
+            floatMatrizAux[z] = localFloatPixel;
+        }
+        //printf("FIN CONVOLUCION\n");
+        for(z=0;z<cor;z++){
+            for(w=0;w<cantCol;w++){
+                printf("%3d", (int)floatMatrizAux[z][w]);
+            }
+            printf("\n");
+        }
+        /*for(int e=0;e<cantCol;w++){
+            printf("%3f", localFloatPixel[e]);
+        }*/
+        pthread_barrier_wait(&barrera);
     }
     if (cantIma == contIma){
         printf("fuera del while cons\n");
