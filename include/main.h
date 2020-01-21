@@ -73,6 +73,7 @@ pixelMatrixImage pixels;
 char fileName[20];
 char index2[14];
 int bFlag;
+int turno;
 
 
 //Functions

@@ -12,6 +12,9 @@
 void* prod(void* param){
     //AQUI DEBERIA IR UN WHILE QUE SEA TIPO I<CANTIDAD DE IMAGENES QUE CUBRA TODA LA FUNCION
     while(contIma < cantIma){
+        turno = 0;
+        vez = 1;
+        printf("\n\ncontIma: %d\n\n\n", contIma);
         pthread_mutex_lock(&p);
         //Pipeline
         //READ
@@ -33,27 +36,35 @@ void* prod(void* param){
         cantCol = pixels.n;
         filasPorHebra = cantFilas/cantHebras;
         filasHebraFinal = filasPorHebra + (cantFilas - (filasPorHebra * cantHebras));
-
+        printf("\n\n\nfilasPorHebra: %d\n",filasPorHebra);
+        printf("filasHebraFinal: %d\n\n\n", filasHebraFinal);
 
         int i;
         for(i=0;i<pixels.m;i++){ //Cantidad de filas
             if(entra == (tamanoB - 1)){
                 printf("buffer llenito\n");
+                printf("HOOLA\n");
                 buffer[entra] = pixels.matrix[i];
                 //rintf("Valor entra: %d\n", entra);
                 entra=0;
                 sale = 0;
                 if(vez == 1){
+                    printf("CHAOO1\n");
                     vez = 0;
                     pthread_mutex_unlock(&c);
                     pthread_mutex_lock(&p);
+                    printf("CHAOO1\n");
                 }else if ((i+1) == pixels.m){ //Si es la ultima fila de la imagen
+                    printf("CHAOO2\n");
                     //printf("finalizando\n");
                     finish = 1;
                     pthread_mutex_unlock(&l);
+                    printf("CHAOO2\n");
                 }else{
+                    printf("CHAOO3\n");
                     pthread_mutex_unlock(&l);
                     pthread_mutex_lock(&p);
+                    printf("CHAOO3\n");
                 }
                 //printf("%d\n", sale);
             }else if ((i+1) == pixels.m){
@@ -69,12 +80,16 @@ void* prod(void* param){
                 entra++;
             }
         }
-        //printf("terminando pro\n");
+        printf("terminando pro\n");
         pthread_mutex_unlock(&c);
         //pthread_mutex_lock(&p);
-        //printf("termino produ\n");
+        contIma = contIma + 1;
+        while(turno != contH);
+        //Aquí las consumidoras terminaron
+        pthread_mutex_unlock(&p);
+        
     }
-    
+    printf("termino produ\n");
     return NULL;
 }
 
@@ -121,7 +136,7 @@ void* consum(void* param){
     printf("Cor: %d\n", cor);
     for(z=0;z<cor;z++){
         for(w=0;w<cantCol;w++){
-            printf("%d | ", matrizAux[z][w]);
+            printf("%3d", matrizAux[z][w]);
         }
         printf("\n");
     }
@@ -196,7 +211,8 @@ void* consum(void* param){
     pthread_barrier_wait(&barrera5);
 
     //pthread_barrier_destroy;*/
-    
+    ////pthread_barrier_wait(&barrera);
+    turno++;
     return NULL;
 }
 
@@ -310,6 +326,7 @@ int main(int argc, char **argv){
         buffer= (int**)malloc((sizeof(int*))*tamanoB);
         //pipeline(cValue, mValue, nValue, hValue, tValue, bFlag);
         pthread_barrier_init(&barrera, NULL, cantHebras);
+        printf("cantHebras; %d\n", cantHebras);
         /*pthread_barrier_init(&barrera2, NULL, cantHebras);
         pthread_barrier_init(&barrera3, NULL, cantHebras);
         pthread_barrier_init(&barrera4, NULL, cantHebras);
@@ -328,6 +345,7 @@ int main(int argc, char **argv){
         contH = 0;
         vez = 1;
         finish = 0;
+        turno = 0;
         pthread_t produ;
         pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * cantHebras);
         buffer= (int**)malloc((sizeof(int*))*tamanoB);
@@ -343,8 +361,9 @@ int main(int argc, char **argv){
         for(j=0;j<cantHebras;j++){
             pthread_join(threads[j], NULL);
         }
-
+        printf("no final\n");
         pthread_join(produ,NULL);
+        printf("final\n");
     }
     return 0;
 }
