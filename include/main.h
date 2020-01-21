@@ -83,7 +83,7 @@ void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int
 pixelMatrixImage pngRead(char * fileName);
 float * convolution(kernelMatrix kernel, int * pixels, int cantCol);
 void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int countImage);
-floatPixelMatrix rectification(floatPixelMatrix floatPixels);
+float * rectification(float * floatPixels, int cantCol);
 floatPixelMatrix pooling(floatPixelMatrix floatPixels);
 floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue);
 pixel_t * pixel_at (bitmap_t * bitmap, int x, int y);

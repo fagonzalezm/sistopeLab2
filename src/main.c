@@ -165,7 +165,7 @@ void* consum(void* param){
             contH = 0;
             finish = 0;
         }
-        pthread_mutex_lock(&et2);
+        //pthread_mutex_lock(&et2);
         //PIPELINE
         //printf("#########  CONVOLUTION  ##########\n");
         for(z = 0; z<cor; z++){
@@ -179,11 +179,27 @@ void* consum(void* param){
             }
             printf("\n");
         }
-        pthread_mutex_unlock(&et2);
-        /*for(int e=0;e<cantCol;w++){
-            printf("%3f", localFloatPixel[e]);
-        }*/
+        //pthread_mutex_unlock(&et2);
+
         pthread_barrier_wait(&barrera);
+        pthread_mutex_lock(&et2);
+        //printf("#########  RECTIFICA  ##########\n");
+        for(z = 0; z<cor; z++){
+            floatMatrizAux[z] = rectification(floatMatrizAux[z], cantCol);
+        }
+        for(z=0;z<cor;z++){
+            for(w=0;w<cantCol;w++){
+                printf("%3d", (int)floatMatrizAux[z][w]);
+            }
+            printf("\n");
+        }
+        pthread_mutex_unlock(&et2);
+
+        pthread_barrier_wait(&barrera);
+        //printf("#########  POOLING  ##########\n");
+
+        pthread_barrier_wait(&barrera);
+        //printf("#########  CLASSIFIER  ##########\n");
     }
     if (cantIma == contIma){
         printf("fuera del while cons\n");

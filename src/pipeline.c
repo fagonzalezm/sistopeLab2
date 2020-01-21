@@ -582,13 +582,11 @@ floatPixelMatrix pooling(floatPixelMatrix floatPixels){
     return floatPixels;
 }
 
-floatPixelMatrix rectification(floatPixelMatrix floatPixels){
+float * rectification(float * floatPixels, int cantCol){
 //Se eliminan los valores negativos
-    for(int i = 0; i<floatPixels.m; i++){
-        for(int j = 0; j<floatPixels.n; j++){
-            if((floatPixels.matrix)[i][j]<0.0){
-                (floatPixels.matrix)[i][j] = 0;
-            }
+    for(int i = 0; i<cantCol; i++){
+        if(floatPixels[i]<0.0){
+            floatPixels[i] = 0;
         }
     }
     return floatPixels;
