@@ -3,11 +3,19 @@
 #include <pthread.h>
 
 //Structures
-typedef struct pixelMatrixImage{
+typedef struct pixelMatrix{
+	int id;
 	int n;
 	int m;
 	int matrix[600][600];
 }pixelMatrixImage;
+
+typedef struct pixelMatrix2{
+	int id;
+	int n;
+	int m;
+	int ** matrix;
+}pixelMatrix;
 
 typedef struct pixelMatrixThread{
 	int n;
@@ -16,10 +24,11 @@ typedef struct pixelMatrixThread{
 }pixelMatrixThread;
 
 typedef struct floatPixelMatrix{
+	int id;
 	int nearlyBlack;
 	int n;
 	int m;
-	float matrix[10][600];
+	float ** matrix;
 }floatPixelMatrix;
 
 typedef struct kernelMatrix{
@@ -83,10 +92,10 @@ int auxHebra;
 //Functions
 void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag);
 pixelMatrixImage pngRead(char * fileName);
-float * convolution(kernelMatrix kernel, int * pixels, int cantCol);
+floatPixelMatrix * convolution(kernelMatrix kernel, int ** pixels, int cantCol, int cantFil, int id);
 void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int countImage);
 float * rectification(float * floatPixels, int cantCol);
-floatPixelMatrix pooling(floatPixelMatrix floatPixels);
+floatPixelMatrix * pooling(floatPixelMatrix * floatPixels, int cantCol, int cantFil);
 floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue);
 pixel_t * pixel_at (bitmap_t * bitmap, int x, int y);
 int save_png_to_file (bitmap_t *bitmap, const char *path);

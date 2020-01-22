@@ -120,7 +120,10 @@ void* consum(void* param){
         }else{
             cor = filasPorHebra;
         }
+        pixelMatrix * pixelAux = (pixelMatrix*)malloc(sizeof(pixelMatrix)); 
         int** matrizAux= (int**)malloc((sizeof(int*)) * cor);
+        pixelAux->matrix=matrizAux;
+        pixelAux->id = id;
         float** floatMatrizAux= (float**)malloc((sizeof(float*)) * cor);
         int x=0;
         while(x<cor){
@@ -183,24 +186,23 @@ void* consum(void* param){
             pthread_mutex_unlock(&p);
             printf("desbloqueaos p\n");
         }*/
-        //pthread_mutex_lock(&et2);
+        pthread_mutex_lock(&et2);
         //PIPELINE
         //printf("#########  CONVOLUTION  ##########\n");
-        for(z = 0; z<cor; z++){
-            float * localFloatPixel = convolution(kernel, matrizAux[z], cantCol);
-            floatMatrizAux[z] = localFloatPixel;
-        }
+        floatPixelMatrix * localFloatPixel = convolution(kernel, matrizAux, cantCol, cor, id);
+        //floatMatrizAux[z] = localFloatPixel;
         //printf("FIN CONVOLUCION\n");
         for(z=0;z<cor;z++){
             for(w=0;w<cantCol;w++){
-                printf("%3d", (int)floatMatrizAux[z][w]);
+                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
             }
             printf("\n");
         }
-        //pthread_mutex_unlock(&et2);
+        pthread_mutex_unlock(&et2);
 
         pthread_barrier_wait(&barrera);
-        pthread_mutex_lock(&et2);
+//////
+        /*pthread_mutex_lock(&et2);
         //printf("#########  RECTIFICA  ##########\n");
         for(z = 0; z<cor; z++){
             floatMatrizAux[z] = rectification(floatMatrizAux[z], cantCol);
@@ -214,11 +216,15 @@ void* consum(void* param){
         pthread_mutex_unlock(&et2);
 
         pthread_barrier_wait(&barrera);
-        //printf("#########  POOLING  ##########\n");
-
+        printf("#########  POOLING  ##########\n");
+        for(z = 0; z<cor; z++){
+            floatMatrizAux[z] = pooling(floatMatrizAux[z], cantCol, cor);
+        }
+        
         pthread_barrier_wait(&barrera);
         //printf("#########  CLASSIFIER  ##########\n");
-
+        */
+//////
         if((bar == 1) && (id == 1)){
             bar = 0;
             vez = 1;
