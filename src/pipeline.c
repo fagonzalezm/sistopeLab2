@@ -372,11 +372,13 @@ pixelMatrixImage pngRead(char * fileName){
 floatPixelMatrix * convolution(kernelMatrix kernel, int ** pixels, int cantCol, int cantFil, int id){
     floatPixelMatrix * floatPixels;
     floatPixels = (floatPixelMatrix*)malloc(sizeof(floatPixelMatrix));
-    floatPixels->matrix = (float**)malloc(sizeof(float*)*cantFil);
-    for(int p = 0; p<cantFil; p++){
-        floatPixels->matrix[p] = (float*)malloc(sizeof(float)*cantCol);
+    floatPixels->matrix = (float**)malloc(sizeof(float*)*(cantFil+2));
+    for(int p = 0; p<cantFil+2; p++){
+        floatPixels->matrix[p] = (float*)malloc(sizeof(float)*(cantCol+2));
     }
     floatPixels->id=id;
+    floatPixels->m=cantFil;
+    floatPixels->n=cantCol;
     //printf("(floatPixels->matrix)[0][0]: %f\n",(floatPixels->matrix)[0][0]);
 	int fila;
 	int columna;
@@ -516,83 +518,80 @@ floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue){
     return floatPixels;
 }
 
-floatPixelMatrix * pooling(floatPixelMatrix * floatPixels, int cantCol, int cantFil){/*
+floatPixelMatrix * pooling(floatPixelMatrix * floatPixels){
     //Se adecua la matrix de pixeles agregando ceros abajo y a la derecha para que el tamaño de la matriz sea divisible por 3 
-    if(floatPixels.m%3==1){
-        for(int i = 0; i<floatPixels.n; i++){
-            (floatPixels.matrix)[floatPixels.m][i]=0.0;
-            (floatPixels.matrix)[floatPixels.m+1][i]=0.0;
-            
+    if((floatPixels->m)%3==1){
+        for(int i = 0; i<(floatPixels->n); i++){
+            (floatPixels->matrix)[(floatPixels->m)][i]=0.0;
+            (floatPixels->matrix)[(floatPixels->m)+1][i]=0.0;
         }
-        floatPixels.m = floatPixels.m + 2;
+        (floatPixels->m) = (floatPixels->m) + 2;
     }
-    else if(floatPixels.m%3==2){
-        for(int i = 0; i<floatPixels.n; i++){
-            (floatPixels.matrix)[floatPixels.m][i]=0.0;
+    else if(floatPixels->m%3==2){
+        for(int i = 0; i<floatPixels->n; i++){
+            (floatPixels->matrix)[floatPixels->m][i]=0.0;
         }
-        floatPixels.m = floatPixels.m + 1;
-    } //el error puede estar aqui
-    
-   int cantColAux;
-    if(cantCol%3==1){
-        for(int i = 0; i<1; i++){
-            floatPixels[cantCol]=0.0;
-            floatPixels[cantCol+1]=0.0;
-        }
-        cantColAux = cantCol + 2;
+        (floatPixels->m) = (floatPixels->m) + 1;
     }
-    else if(cantCol%3==2){
-        for(int i = 0; i<1; i++){
-            floatPixels[cantCol]=0.0;
+    if((floatPixels->n)%3==1){
+        for(int i = 0; i<(floatPixels->m); i++){
+        
+            (floatPixels->matrix)[i][floatPixels->n]=0.0;
+            (floatPixels->matrix)[i][floatPixels->n+1]=0.0;
         }
-        cantColAux = cantCol + 1;
+        (floatPixels->n) = floatPixels->n + 2;
+    }
+    else if(floatPixels->n%3==2){
+        for(int i = 0; i<1; i++){
+            (floatPixels->matrix)[i][floatPixels->n]=0.0;
+        }
+        (floatPixels->n) = floatPixels->n + 1;
     }
     //Se recorre la matriz de pixeles de 9 en 9, definiendo el valor mayor dentro de ese conjunto
-    for(int i = 0; i<(1/3); i++){
-        for(int j = 0; j<(cantColAux/3); j++){
-            float higher = floatPixels[3*j];
-            if(floatPixels[3*j] > higher){
-                higher = floatPixels[3*j];
+    for(int i = 0; i<(floatPixels->m/3); i++){
+        for(int j = 0; j<((floatPixels->n)/3); j++){
+            float higher = (floatPixels->matrix)[3*i][3*j];
+            if((floatPixels->matrix)[3*i+1][3*j] > higher){
+                higher = (floatPixels->matrix)[3*i+1][3*j];
             }
-            if(floatPixels[3*j+1] > higher){
-                higher = floatPixels[3*j+1];
+            if((floatPixels->matrix)[3*i+2][3*j] > higher){
+                higher = (floatPixels->matrix)[3*i+2][3*j];
             }
-            if(floatPixels[3*j+2] > higher){
-                higher = floatPixels[3*j+2];
+            if((floatPixels->matrix)[3*i][3*j+1] > higher){
+                higher = (floatPixels->matrix)[3*i][3*j+1];
             }
-            /*
-            if((floatPixels.matrix)[3*i+1][3*j+1] > higher){
-                higher = (floatPixels.matrix)[3*i+1][3*j+1];
+            if((floatPixels->matrix)[3*i+1][3*j+1] > higher){
+                higher = (floatPixels->matrix)[3*i+1][3*j+1];
             }
-
-            if((floatPixels.matrix)[3*i+2][3*j+1] > higher){
-                higher = (floatPixels.matrix)[3*i+2][3*j+1];
+            if((floatPixels->matrix)[3*i+2][3*j+1] > higher){
+                higher = (floatPixels->matrix)[3*i+2][3*j+1];
             }
-
-            if((floatPixels.matrix)[3*i][3*j+2] > higher){
-                higher = (floatPixels.matrix)[3*i][3*j+2];
+            if((floatPixels->matrix)[3*i][3*j+2] > higher){
+                higher = (floatPixels->matrix)[3*i][3*j+2];
             }
-            if((floatPixels.matrix)[3*i+1][3*j+2] > higher){
-                higher = (floatPixels.matrix)[3*i+1][3*j+2];
+            if((floatPixels->matrix)[3*i+1][3*j+2] > higher){
+                higher = (floatPixels->matrix)[3*i+1][3*j+2];
             }
-            if((floatPixels.matrix)[3*i+2][3*j+2] > higher){
-                higher = (floatPixels.matrix)[3*i+2][3*j+2];
+            if((floatPixels->matrix)[3*i+2][3*j+2] > higher){
+                higher = (floatPixels->matrix)[3*i+2][3*j+2];
             }
             //Se reemplaza el valor mayor en su lugar correspondiente
-            floatPixels[j]=higher;
+            (floatPixels->matrix)[i][j]=higher;
         }
     }
     //Se reduce el tamaño de la matriz
-    cantCol = cantColAux/3;
-    cantCol = cantColAux/3;*/ 
+    (floatPixels->m) = (floatPixels->m)/3;
+    (floatPixels->n) = (floatPixels->n)/3;
     return floatPixels;
 }
 
-float * rectification(float * floatPixels, int cantCol){
-//Se eliminan los valores negativos
-    for(int i = 0; i<cantCol; i++){
-        if(floatPixels[i]<0.0){
-            floatPixels[i] = 0;
+floatPixelMatrix * rectification(floatPixelMatrix * floatPixels){
+    //Se eliminan los valores negativos
+    for(int i = 0; i<floatPixels->m; i++){
+        for(int j = 0; j< floatPixels->n; j++){
+            if((floatPixels->matrix)[i][j]<0.0){
+                (floatPixels->matrix)[i][j] = 0.0;
+            }
         }
     }
     return floatPixels;

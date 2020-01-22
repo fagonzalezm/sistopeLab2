@@ -186,7 +186,7 @@ void* consum(void* param){
             pthread_mutex_unlock(&p);
             printf("desbloqueaos p\n");
         }*/
-        pthread_mutex_lock(&et2);
+        //pthread_mutex_lock(&et2);
         //PIPELINE
         //printf("#########  CONVOLUTION  ##########\n");
         floatPixelMatrix * localFloatPixel = convolution(kernel, matrizAux, cantCol, cor, id);
@@ -198,30 +198,37 @@ void* consum(void* param){
             }
             printf("\n");
         }
-        pthread_mutex_unlock(&et2);
+        //pthread_mutex_unlock(&et2);
 
         pthread_barrier_wait(&barrera);
 //////
-        /*pthread_mutex_lock(&et2);
-        //printf("#########  RECTIFICA  ##########\n");
-        for(z = 0; z<cor; z++){
-            floatMatrizAux[z] = rectification(floatMatrizAux[z], cantCol);
-        }
+        //pthread_mutex_lock(&et2);
+        localFloatPixel = rectification(localFloatPixel);
         for(z=0;z<cor;z++){
             for(w=0;w<cantCol;w++){
-                printf("%3d", (int)floatMatrizAux[z][w]);
+                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
+            }
+            printf("\n");
+        }
+        //pthread_mutex_unlock(&et2);
+
+        
+        pthread_barrier_wait(&barrera);
+        
+        pthread_mutex_lock(&et2);
+
+        //printf("#########  POOLING  ##########\n");
+        localFloatPixel = pooling(localFloatPixel);
+        for(z=0;z<localFloatPixel->m;z++){
+            for(w=0;w<localFloatPixel->n;w++){
+                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
             }
             printf("\n");
         }
         pthread_mutex_unlock(&et2);
 
         pthread_barrier_wait(&barrera);
-        printf("#########  POOLING  ##########\n");
-        for(z = 0; z<cor; z++){
-            floatMatrizAux[z] = pooling(floatMatrizAux[z], cantCol, cor);
-        }
-        
-        pthread_barrier_wait(&barrera);
+        /*
         //printf("#########  CLASSIFIER  ##########\n");
         */
 //////
