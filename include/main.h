@@ -64,6 +64,10 @@ pthread_mutex_t p;
 pthread_mutex_t l;
 pthread_mutex_t wh;
 pthread_mutex_t et2;
+pthread_mutex_t escri;
+pthread_mutex_t clas;
+pthread_mutex_t calculo;
+pthread_mutex_t asig;
 int cantHebras;
 int tamanoB;
 int cantIma;
@@ -72,9 +76,11 @@ int** buffer;
 int bar;
 int entra;
 int sale;
+int ultima;
 int** matrizprueba;
 int filasHebraFinal;
 int filasPorHebra;
+int hebraRes;
 //pixelMatrixThread * matrizAux; 
 int contH;
 int vez;
@@ -87,6 +93,13 @@ char index2[14];
 int bFlag;
 int turno;
 int auxHebra;
+int colAct;
+int filAct;
+int hebraMem;
+int turnoHebra;
+int posEsc;
+int umbralC;
+floatPixelMatrix resultante;
 
 
 //Functions

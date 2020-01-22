@@ -330,10 +330,10 @@ void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int 
     //Si se requiere mostrar la evaluacion de nearlyblack se muestra el resultado
     if(bFlag == 1){
         if(floatPixels.nearlyBlack==1){
-            printf("|  imagen_%d |     yes      |\n",countImage+1);
+            printf("|  imagen_%d |     yes      |\n",countImage);
         }
         else if(floatPixels.nearlyBlack==0){
-            printf("|  imagen_%d |      no      |\n",countImage+1);
+            printf("|  imagen_%d |      no      |\n",countImage);
         }
     }
     //Se escribe el resultado del pipeline
@@ -441,6 +441,7 @@ int writeImage(floatPixelMatrix matrizPix, char * fileOut){
     int yg;
     int status;
     status = 0;
+    printf("escribiendo \n");
 
     /* Se crean las struct */
     
@@ -454,6 +455,7 @@ int writeImage(floatPixelMatrix matrizPix, char * fileOut){
     for (yg = 0; yg < pngOut.height; yg++) {
         for (xg = 0; xg < pngOut.width; xg++) {
             pixel_t * pixel = pixel_at (& pngOut, xg, yg);
+            printf("bum\n");
             pixel->color = (int) matrizPix.matrix[yg][xg];
         }
     }
@@ -464,7 +466,7 @@ int writeImage(floatPixelMatrix matrizPix, char * fileOut){
         fprintf (stderr, "Error escribiendo archivo.\n");
         status = -1;
     }
-
+    printf("escrito\n");
     free (pngOut.pixels);
     return status;
 }

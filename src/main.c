@@ -157,6 +157,8 @@ void* consum(void* param){
 
         //CONVOLUTION
         floatPixelMatrix * localFloatPixel = convolution(kernel, matrizAux, cantCol, cor, id);
+        localFloatPixel->m= cor;
+        localFloatPixel->n = cantCol;
         for(z=0;z<cor;z++){
             for(w=0;w<cantCol;w++){
                 printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
@@ -195,18 +197,95 @@ void* consum(void* param){
 
 
         //CLASSIFIER
+        pthread_mutex_lock(&calculo);
+        colAct = localFloatPixel->n;  //columnas de la hebra despues de pool
+        filAct = filAct + localFloatPixel->m;  //filas de la hebra despues de pool
+        pthread_mutex_unlock(&calculo);
+        printf("calculacion de los tamanos actuales\n");
+        pthread_barrier_wait(&barrera);
+        printf("ya calculamos los tamanos actuales\n");
+        pthread_mutex_lock(&asig);
+            if(hebraMem == 1){
+                hebraMem = 0;
+                hebraRes = id;
+                printf("hebra mem\n");
+                //Asignacion de memoria para la matriz imagen resultante
+                resultante.matrix = (float**) malloc((sizeof(float)) * filAct);
+                resultante.m = filAct;
+                resultante.n = colAct;
+            }
 
+        pthread_mutex_unlock(&asig);
+        printf("antes de while\n");
+        printf("%d\n", id);
+        printf("turno hebra: %d\n", turnoHebra);
+        while (turnoHebra != id);
+        pthread_mutex_lock(&escri);
+        turnoHebra++;
+        int fila;
+        //printf("cantidad filas: %d\n", localFloatPixel->m);
+        for(fila = 0; fila < (localFloatPixel->m); fila++){
+            //printf("fila escritura: %d\n", fila);
+            //printf("posEsc: %d\n", posEsc);
+            resultante.matrix[posEsc] = localFloatPixel->matrix[fila];
+            posEsc++; 
+        }
+        pthread_mutex_unlock(&escri);
+        pthread_barrier_wait(&barrera);
+        pthread_mutex_lock(&clas);
+        if(hebraRes == id){
+            ultima = 0;
+            resultante = classifier(resultante, umbralC);
+            printf("\n\nCLASSIFIER: ");
+            printf("(%d,%d)\n\n",resultante.m,resultante.n);
+            for(int p = 0; p<resultante.m; p++){
+                for(int q = 0; q<resultante.n; q++){
+                    printf("%3d",(int) resultante.matrix[p][q]);
+                }
+                printf("\n");
+            }
+            printf("casi escribo\n");
+            strcpy(fileName, "out_");
+            sprintf(index2,"%d",contIma);
+            strcat(fileName,index2);
+            resultsWriter(resultante, fileName, bFlag, contIma);
+            printf("\n\nRESULTSWRITER: ");
+            printf("(%d,%d)\n\n",resultante.m,resultante.n);
+            for(int p = 0; p<resultante.m; p++){
+                for(int q = 0; q<resultante.n; q++){
+                    printf("%3d",(int) resultante.matrix[p][q]);
+                }
+                printf("\n");
+            }
+        }
+        pthread_mutex_unlock(&clas);
+
+        pthread_barrier_wait(&barrera);
+        if (hebraRes == id){
+            free(resultante.matrix);
+        }
+        free(pixelAux);
+        free(matrizAux);
+        free(floatMatrizAux);
         if((bar == 1) && (id == 1)){
             bar = 0;
             vez = 1;
             contH = 0;
             finish = 0;
+            hebraMem = 1;
+            ultima = 1;
+            turnoHebra = 1;
+            posEsc = 0;
+            colAct = 0;  //columnas de la hebra despues de pool
+            filAct = 0;
+            
             printf("bar\n");
             pthread_mutex_unlock(&wh);
             printf("wh desbloqueado\n");
             pthread_mutex_unlock(&p);
             printf("desbloqueaos p\n");
         }
+        
     }
     if (cantIma == contIma){
         printf("fuera del while cons\n");
@@ -312,6 +391,7 @@ int main(int argc, char **argv){
     }
     else{
         cantIma = cValue;
+        umbralC = nValue;
         preparation(mValue); //Se abre el archivo txt con el kernel y se crea el kernel
         tamanoB = tValue;
         buffer= (int**)malloc((sizeof(int*))*tamanoB);
@@ -323,6 +403,10 @@ int main(int argc, char **argv){
         pthread_mutex_init(&l,NULL);
         pthread_mutex_init(&wh,NULL);
         pthread_mutex_init(&et2,NULL);
+        pthread_mutex_init(&escri,NULL);
+        pthread_mutex_init(&clas,NULL);
+        pthread_mutex_init(&calculo,NULL);
+        pthread_mutex_init(&asig,NULL);
 
         pthread_mutex_lock(&c);
         pthread_mutex_lock(&l);
@@ -336,9 +420,14 @@ int main(int argc, char **argv){
         finish = 0;
         turno = 0;
         auxHebra = 0;
+        turnoHebra = 1;
+        hebraMem = 1;
+        posEsc = 0;
+        ultima = 1;
+        hebraRes = 0;
         pthread_t produ;
         pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * cantHebras);
-        buffer= (int**)malloc((sizeof(int*))*tamanoB);
+        //buffer= (int**)malloc((sizeof(int*))*tamanoB);
 
         pthread_create(&produ,NULL,prod,(void*) 1);
 
