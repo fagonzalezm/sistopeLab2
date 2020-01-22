@@ -16,33 +16,20 @@ void* prod(void* param){
         bar = 1;
         turno = 0;
         vez = 1;
-        printf("\n\ncontIma: %d\n\n\n", contIma);
         
         strcpy(fileName, "imagen_");
         sprintf(index2,"%d",contIma+1);
         strcat(fileName,index2);
         pixels = pngRead(fileName);
-        printf("\n\nFile: %s ", fileName);
-        printf("(%d,%d)\n\n",pixels.m,pixels.n);
-        for(int p = 0; p<pixels.m; p++){
-            for(int q = 0; q<pixels.n; q++){
-                printf("%3d",pixels.matrix[p][q]);
-            }
-            printf("\n");
-        }
-        
         
         cantFilas = pixels.m;
         cantCol = pixels.n;
         filasPorHebra = cantFilas/cantHebras;
         filasHebraFinal = filasPorHebra + (cantFilas - (filasPorHebra * cantHebras));
-        printf("\n\n\nfilasPorHebra: %d\n",filasPorHebra);
-        printf("filasHebraFinal: %d\n\n\n", filasHebraFinal);
 
         int i;
         for(i=0;i<pixels.m;i++){ //Cantidad de filas
             if(entra == (tamanoB - 1)){
-                printf("buffer llenito\n");
                 buffer[entra] = pixels.matrix[i];
                 entra=0;
                 sale = 0;
@@ -70,18 +57,14 @@ void* prod(void* param){
         }
 
         if(auxHebra == cantHebras){
-            printf("soy prod y ya pasaron todas las hebras cons\n");
         }else if(auxHebra < cantHebras){
             pthread_mutex_unlock(&c);
         }else{
 
         }
-        printf("terminamos un ciclo while\n");
         pthread_mutex_lock(&wh);
-        printf("pasamos el lock w\n");
     }
     if (cantIma == contIma){
-        printf("fuera del while prod\n");
         }
     return NULL;
 }
@@ -93,15 +76,12 @@ void* prod(void* param){
 void* consum(void* param){
     while(contIma < cantIma){
         pthread_mutex_lock(&c);
-        printf("cruzado loc c\n");
-        printf("cantIma%d\n", cantIma );
         contH++;
         auxHebra++;
         int cor;
         int id;
         id = contH;
         if(contH == cantHebras){
-            printf("last hebra\n");
             cor = filasHebraFinal;
         }else{
             cor = filasPorHebra;
@@ -116,7 +96,6 @@ void* consum(void* param){
             if(sale == (tamanoB - 1)){
                 matrizAux[x] = buffer[sale];
                 if(finish == 1){
-                    printf("finished\n");
                     x = cor;
                 }
                 else{
@@ -132,21 +111,11 @@ void* consum(void* param){
         }
         int z;
         int w;
-        printf("Hebra: %d\n", contH);
-        printf("Cor: %d\n", cor);
-        for(z=0;z<cor;z++){
-            for(w=0;w<cantCol;w++){
-                printf("%3d", matrizAux[z][w]);
-            }
-            printf("\n");
-        }
         turno++;
 
         if(contH == cantHebras){
-            printf("termino la ejecucion de todas las hebras cons\n");
             contIma = contIma + 1;
         }else{
-            printf("abrimos paso a la sigueinte cons\n");
             pthread_mutex_unlock(&c);
         }
         pthread_barrier_wait(&barrera);
@@ -159,24 +128,12 @@ void* consum(void* param){
         floatPixelMatrix * localFloatPixel = convolution(kernel, matrizAux, cantCol, cor, id);
         localFloatPixel->m= cor;
         localFloatPixel->n = cantCol;
-        for(z=0;z<cor;z++){
-            for(w=0;w<cantCol;w++){
-                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
-            }
-            printf("\n");
-        }
 
         pthread_barrier_wait(&barrera);
 
 
         //RECTIFICATION
         localFloatPixel = rectification(localFloatPixel);
-        for(z=0;z<cor;z++){
-            for(w=0;w<cantCol;w++){
-                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
-            }
-            printf("\n");
-        }
 
         
         pthread_barrier_wait(&barrera);
@@ -185,12 +142,6 @@ void* consum(void* param){
 
         //POOLING
         localFloatPixel = pooling(localFloatPixel);
-        for(z=0;z<localFloatPixel->m;z++){
-            for(w=0;w<localFloatPixel->n;w++){
-                printf("%3d", (int)(localFloatPixel->matrix)[z][w]);
-            }
-            printf("\n");
-        }
         pthread_mutex_unlock(&et2);
 
         pthread_barrier_wait(&barrera);
@@ -201,33 +152,24 @@ void* consum(void* param){
         colAct = localFloatPixel->n;  //columnas de la hebra despues de pool
         filAct = filAct + localFloatPixel->m;  //filas de la hebra despues de pool
         pthread_mutex_unlock(&calculo);
-        printf("calculacion de los tamanos actuales\n");
         pthread_barrier_wait(&barrera);
-        printf("ya calculamos los tamanos actuales\n");
         pthread_mutex_lock(&asig);
             if(hebraMem == 1){
                 hebraMem = 0;
                 hebraRes = id;
-                printf("hebra mem\n");
                 //Asignacion de memoria para la matriz imagen resultante
-                resultante.matrix = (float**) malloc((sizeof(float)) * filAct);
-                resultante.m = filAct;
-                resultante.n = colAct;
+                //resultante.matrix = (float**) malloc((sizeof(float)) * filAct);
+                resultante->m = filAct;
+                resultante->n = colAct;
             }
 
         pthread_mutex_unlock(&asig);
-        printf("antes de while\n");
-        printf("%d\n", id);
-        printf("turno hebra: %d\n", turnoHebra);
         while (turnoHebra != id);
         pthread_mutex_lock(&escri);
         turnoHebra++;
         int fila;
-        //printf("cantidad filas: %d\n", localFloatPixel->m);
         for(fila = 0; fila < (localFloatPixel->m); fila++){
-            //printf("fila escritura: %d\n", fila);
-            //printf("posEsc: %d\n", posEsc);
-            resultante.matrix[posEsc] = localFloatPixel->matrix[fila];
+            (resultante->matrix)[posEsc] = (localFloatPixel->matrix)[fila];
             posEsc++; 
         }
         pthread_mutex_unlock(&escri);
@@ -236,37 +178,16 @@ void* consum(void* param){
         if(hebraRes == id){
             ultima = 0;
             resultante = classifier(resultante, umbralC);
-            printf("\n\nCLASSIFIER: ");
-            printf("(%d,%d)\n\n",resultante.m,resultante.n);
-            for(int p = 0; p<resultante.m; p++){
-                for(int q = 0; q<resultante.n; q++){
-                    printf("%3d",(int) resultante.matrix[p][q]);
-                }
-                printf("\n");
-            }
-            printf("casi escribo\n");
             strcpy(fileName, "out_");
             sprintf(index2,"%d",contIma);
             strcat(fileName,index2);
             resultsWriter(resultante, fileName, bFlag, contIma);
-            printf("\n\nRESULTSWRITER: ");
-            printf("(%d,%d)\n\n",resultante.m,resultante.n);
-            for(int p = 0; p<resultante.m; p++){
-                for(int q = 0; q<resultante.n; q++){
-                    printf("%3d",(int) resultante.matrix[p][q]);
-                }
-                printf("\n");
-            }
         }
         pthread_mutex_unlock(&clas);
 
         pthread_barrier_wait(&barrera);
         if (hebraRes == id){
-            free(resultante.matrix);
         }
-        free(pixelAux);
-        free(matrizAux);
-        free(floatMatrizAux);
         if((bar == 1) && (id == 1)){
             bar = 0;
             vez = 1;
@@ -279,16 +200,12 @@ void* consum(void* param){
             colAct = 0;  //columnas de la hebra despues de pool
             filAct = 0;
             
-            printf("bar\n");
             pthread_mutex_unlock(&wh);
-            printf("wh desbloqueado\n");
             pthread_mutex_unlock(&p);
-            printf("desbloqueaos p\n");
         }
         
     }
     if (cantIma == contIma){
-        printf("fuera del while cons\n");
         }
     
     return NULL;
@@ -305,6 +222,11 @@ int main(int argc, char **argv){
     bFlag = 0;
     int hValue = 0;
     int tValue = 0;
+    resultante = (floatPixelMatrix *)malloc(sizeof(floatPixelMatrix *));
+    resultante->matrix = (float**) malloc((sizeof(float*)) * 600);
+    for(int p = 0; p<600; p++){
+        (resultante->matrix)[p] = (float*) malloc((sizeof(float)) * 600);
+    }
 
     opterr = 0;
     int flag;
@@ -396,7 +318,6 @@ int main(int argc, char **argv){
         tamanoB = tValue;
         buffer= (int**)malloc((sizeof(int*))*tamanoB);
         pthread_barrier_init(&barrera, NULL, cantHebras);
-        printf("cantHebras; %d\n", cantHebras);
 
         pthread_mutex_init(&c,NULL);
         pthread_mutex_init(&p,NULL);
@@ -427,7 +348,6 @@ int main(int argc, char **argv){
         hebraRes = 0;
         pthread_t produ;
         pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * cantHebras);
-        //buffer= (int**)malloc((sizeof(int*))*tamanoB);
 
         pthread_create(&produ,NULL,prod,(void*) 1);
 

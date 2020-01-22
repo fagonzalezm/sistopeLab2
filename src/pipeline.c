@@ -20,12 +20,6 @@ void preparation(char * mValue){
     FILE * file = fopen(mValue, "r");
     fscanf(file,"%d %d %d %d %d %d %d %d %d",&(kernel.matrix)[0][0],&(kernel.matrix)[0][1],&(kernel.matrix)[0][2],&(kernel.matrix)[1][0],&(kernel.matrix)[1][1],&(kernel.matrix)[1][2],&(kernel.matrix)[2][0],&(kernel.matrix)[2][1],&(kernel.matrix)[2][2]);
     fclose(file);
-    for(int i = 0; i<3; i++){
-        for(int j = 0; j<3; j++){
-            printf("%d ",(kernel.matrix)[i][j]);
-        }
-        printf("\n");
-    }
 }
 
 
@@ -51,17 +45,16 @@ pixelMatrixImage pngRead(char * fileName){
     //apertura del archivo (imagen) para lectura en binario
     fp = fopen (fileName, "rb");
     if (! fp) {
-		//printf("Error, el archivo no pudo ser abierto.\n");
     }
     //Se crea la estructura de lectura de PNG
     png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (! png_ptr) {
-		//printf("No se pudo crear la estructura PNG de lectura.\n");
+		printf("No se pudo crear la estructura PNG de lectura.\n");
     }
     //Se crea la estructura de informacion de PNG
     info_ptr = png_create_info_struct (png_ptr);
     if (! png_ptr) {
-		//printf("No se pudo crear la estructura PNG de informacion.\n");
+		printf("No se pudo crear la estructura PNG de informacion.\n");
     }
     //Se inicializan las funciones de entrada y salida predeterminadas para PNG 
     png_init_io (png_ptr, fp);
@@ -86,11 +79,8 @@ pixelMatrixImage pngRead(char * fileName){
       for (y = 0; y < ancho; y++) {
         png_byte pixel;
         pixel = row[y];
-        //printf("%d", pixel);
         matrizPix.matrix[x][y] = (int) pixel;
-        //
       }
-		//printf ("\n");
     }
     fclose(fp);
 
@@ -206,16 +196,16 @@ floatPixelMatrix * convolution(kernelMatrix kernel, int ** pixels, int cantCol, 
 //          int nValue que corresponde al umbral de clasificación de imagen
 //Funcionamiento: Cuenta la cantidad de pixeles que se consideren negros
 //Salida:   floatPixelMatrix  que corresponde a la imagen evaluada
-floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue){
+floatPixelMatrix * classifier(floatPixelMatrix * floatPixels, int nValue){
     int solution = 0;
     //Se define el valor especifico del umbral
-    int size = floatPixels.m * floatPixels.n;
+    int size = floatPixels->m * floatPixels->n;
     int threshold = (int)((nValue/100.0)*size);
     //Se obtiene la cantidad de pixeles negros en la matriz de pixeles
     int count = 0;
-    for(int i = 0; i < floatPixels.m; i++){
-        for(int j = 0; j < floatPixels.n; j++){
-            if(floatPixels.matrix[i][j] == 0.0){
+    for(int i = 0; i < floatPixels->m; i++){
+        for(int j = 0; j < floatPixels->n; j++){
+            if((floatPixels->matrix)[i][j] == 0.0){
                 count = count + 1;
                 //Si la cantidad de pixeles negros es igual al umbral se retorna 1 
                 if(count >= threshold){
@@ -227,10 +217,10 @@ floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue){
     }
     //Se define el valor nearlyBlack de la imagen
     if(solution == 1){
-        floatPixels.nearlyBlack = 1;
+        floatPixels->nearlyBlack = 1;
     }
     else{
-        floatPixels.nearlyBlack = 0;
+        floatPixels->nearlyBlack = 0;
     }
     return floatPixels;
 }
@@ -326,13 +316,13 @@ floatPixelMatrix * rectification(floatPixelMatrix * floatPixels){
 //          int countImage id de la imagen
 //Funcionamiento: Escribe en pantalla si cierta imagen es considerada negra
 //Salida:   void Muestra por pantalla el resultado
-void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int countImage){
+void resultsWriter(floatPixelMatrix * floatPixels, char * fileName,int bFlag, int countImage){
     //Si se requiere mostrar la evaluacion de nearlyblack se muestra el resultado
     if(bFlag == 1){
-        if(floatPixels.nearlyBlack==1){
+        if(floatPixels->nearlyBlack==1){
             printf("|  imagen_%d |     yes      |\n",countImage);
         }
-        else if(floatPixels.nearlyBlack==0){
+        else if(floatPixels->nearlyBlack==0){
             printf("|  imagen_%d |      no      |\n",countImage);
         }
     }
@@ -435,18 +425,17 @@ int save_png_to_file (bitmap_t *bitmap, const char *path)
 //Entrada: Matriz de flotantes que contienen los valores de los pixeles / String que indica el nombre de salida.
 //Funcionamiento: Se prepara la estructura necesaria (bitmap_t) con los datos de la matriz de flotantes y se escribe la imagen.
 //Salida: entero que indica el estado del resultado de la función.
-int writeImage(floatPixelMatrix matrizPix, char * fileOut){
+int writeImage(floatPixelMatrix * matrizPix, char * fileOut){
     bitmap_t pngOut;
     int xg;
     int yg;
     int status;
     status = 0;
-    printf("escribiendo \n");
 
     /* Se crean las struct */
     
-    pngOut.width = matrizPix.n;
-    pngOut.height = matrizPix.m;
+    pngOut.width = matrizPix->n;
+    pngOut.height = matrizPix->m;
     pngOut.pixels = calloc (pngOut.width * pngOut.height, sizeof (pixel_t));
     if (! pngOut.pixels) {
     return -1;
@@ -455,8 +444,7 @@ int writeImage(floatPixelMatrix matrizPix, char * fileOut){
     for (yg = 0; yg < pngOut.height; yg++) {
         for (xg = 0; xg < pngOut.width; xg++) {
             pixel_t * pixel = pixel_at (& pngOut, xg, yg);
-            printf("bum\n");
-            pixel->color = (int) matrizPix.matrix[yg][xg];
+            pixel->color = (int) (matrizPix->matrix)[yg][xg];
         }
     }
 
@@ -466,7 +454,6 @@ int writeImage(floatPixelMatrix matrizPix, char * fileOut){
         fprintf (stderr, "Error escribiendo archivo.\n");
         status = -1;
     }
-    printf("escrito\n");
     free (pngOut.pixels);
     return status;
 }

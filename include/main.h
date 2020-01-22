@@ -99,20 +99,20 @@ int hebraMem;
 int turnoHebra;
 int posEsc;
 int umbralC;
-floatPixelMatrix resultante;
+floatPixelMatrix * resultante;
 
 
 //Functions
 void pipeline(int cValue, char * mValue, int nValue, int hValue, int tValue, int bFlag);
 pixelMatrixImage pngRead(char * fileName);
 floatPixelMatrix * convolution(kernelMatrix kernel, int ** pixels, int cantCol, int cantFil, int id);
-void resultsWriter(floatPixelMatrix floatPixels, char * fileName,int bFlag, int countImage);
+void resultsWriter(floatPixelMatrix * floatPixels, char * fileName,int bFlag, int countImage);
 floatPixelMatrix * rectification(floatPixelMatrix * floatPixels);
 floatPixelMatrix * pooling(floatPixelMatrix * floatPixels);
-floatPixelMatrix classifier(floatPixelMatrix floatPixels, int nValue);
+floatPixelMatrix * classifier(floatPixelMatrix * floatPixels, int nValue);
 pixel_t * pixel_at (bitmap_t * bitmap, int x, int y);
 int save_png_to_file (bitmap_t *bitmap, const char *path);
-int writeImage(floatPixelMatrix matrizPix, char * fileOut);
+int writeImage(floatPixelMatrix * matrizPix, char * fileOut);
 void preparation(char * mValue);
 
 #endif
